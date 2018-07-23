@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using FrameWork.Core;
 using UnityEditor.MemoryProfiler;
@@ -11,15 +12,12 @@ public class GameManager : ServiceModule<GameManager> {
     public void CreateGame()
     {
         LoadGameMap();
-
-        CreatePlayer();
     }
 
-    public void CreatePlayer()
+    public void CreatePlayer(uint playerId)
     {
         SnakePlayer player = new SnakePlayer();
-        player.Create();
-
+        player.Create(playerId);
         m_playerList.Add(player);
     }
 
@@ -28,6 +26,76 @@ public class GameManager : ServiceModule<GameManager> {
         GameObject mapObj = Resources.Load<GameObject>("map/map_0");
 
         GameObject mapGo = GameObject.Instantiate(mapObj);
+    }
+
+    private int GetPlayerIndex(uint playerId)
+    {
+        for (int i = 0; i < m_playerList.Count; i++)
+        {
+            if (m_playerList[i].Id == playerId)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private SnakePlayer GetPlayer(uint playerId)
+    {
+        int index = GetPlayerIndex(playerId);
+        if (index >= 0)
+        {
+            return m_playerList[index];
+        }
+
+        return null;
+    }
+
+    public void InputVKey(int vkey, float args,uint playerId)
+    {
+      
+        if (playerId == 0)
+        {
+            HandleOtherVkey(vkey, args, playerId);
+        }
+        else
+        {
+            SnakePlayer player = GetPlayer(playerId);
+            if (player != null)
+            {
+                player.InputVKey(vkey,args);
+            }
+            else
+            {
+                HandleOtherVkey(vkey, args, playerId);
+            }
+        }
+    }
+
+    private void HandleOtherVkey(int vkey, float arg, uint playerId)
+    {
+        //全局的VKey处理
+        bool hasHandled = false;
+        hasHandled = hasHandled || DoVKeyCreatePlayer(vkey, arg, playerId);
+    }
+
+    private bool DoVKeyCreatePlayer(int vkey, float arg, uint playerId)
+    {
+        if (vkey == GameVKey.CreatePlayer)
+        {
+            CreatePlayer(playerId);
+            return true;
+        }
+        return false;
+    }
+
+
+    public void EnterFrame(int frameIndex)
+    {
+        for (int i = 0; i < m_playerList.Count; i++)
+        {
+            m_playerList[i].EnterFrame(frameIndex);
+        }
     }
 
 }

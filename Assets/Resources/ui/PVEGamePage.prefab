@@ -223,8 +223,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: OnBtnReady
+      - m_Target: {fileID: 114285045179575318}
+        m_MethodName: OnReadyClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -326,6 +326,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bcbfcb9a0cac4c4a91dfda2b58d3f44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ReadyBtn: {fileID: 114234593462457662}
 --- !u!114 &114335888484841670
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -12,6 +12,11 @@ public class SnakeNode : EnityObject
 
     protected Vector3 m_angles;
 
+    public override Vector3 Position()
+    {
+        return m_pos;
+    }
+
     public SnakeNode Next{ get { return m_next; } }
 
     public void SetNext(SnakeNode node)
@@ -55,6 +60,10 @@ public class SnakeNode : EnityObject
 
     public void MoveTo(Vector3 pos)
     {
+        if (this is SnakeHead)
+        {
+            Debug.Log(m_pos);
+        }
         Vector3 oldPos = m_pos;
         m_pos = pos;
 
