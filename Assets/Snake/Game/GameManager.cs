@@ -10,7 +10,9 @@ public class GameManager : ServiceModule<GameManager> {
 
     public void CreateGame()
     {
+        LoadGameMap();
 
+        CreatePlayer();
     }
 
     public void CreatePlayer()
@@ -19,6 +21,13 @@ public class GameManager : ServiceModule<GameManager> {
         player.Create();
 
         m_playerList.Add(player);
+    }
+
+    private void LoadGameMap()
+    {
+        GameObject mapObj = Resources.Load<GameObject>("map/map_0");
+
+        GameObject mapGo = GameObject.Instantiate(mapObj);
     }
 
 }

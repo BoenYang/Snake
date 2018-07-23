@@ -16,7 +16,7 @@ public class VSnakeNode : MonoBehaviour
 
         if (m_renderer)
         {
-
+            m_renderer.sortingOrder = 10000;
         }
     }
 

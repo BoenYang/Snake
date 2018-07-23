@@ -50,6 +50,16 @@ public class UIManager : ServiceModule<UIManager> {
             return null;
         }
 
+        foreach (PageTrack pageTrack in m_pageStack)
+        {
+            foreach (UIPanel uiPanel in pageTrack.WindowsStack)
+            {
+                uiPanel.gameObject.SetActive(false);
+            }
+
+            pageTrack.Page.gameObject.SetActive(false);
+        }
+
         UIPanel panel = CreateUI(uiPrefab);
         panel.Open(args);
         m_currentPage = new PageTrack(panel);
@@ -63,6 +73,16 @@ public class UIManager : ServiceModule<UIManager> {
         {
             PageTrack topPageTrack = m_pageStack.Last.Value;
             RemovePage(topPageTrack);
+
+            if (m_pageStack.Count > 0)
+            {
+                foreach (UIPanel uiPanel in m_pageStack.Last.Value.WindowsStack)
+                {
+                    uiPanel.gameObject.SetActive(true);
+                }
+
+                m_pageStack.Last.Value.Page.gameObject.SetActive(true);
+            }
         }
     }
 
