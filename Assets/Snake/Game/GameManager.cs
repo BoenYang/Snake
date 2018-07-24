@@ -9,9 +9,19 @@ public class GameManager : ServiceModule<GameManager> {
 
     private List<SnakePlayer> m_playerList = new List<SnakePlayer>();
 
+
+    public bool IsRunning { get { return this.m_isRunning; } }
+
+    private bool m_isRunning;
+
+
     public void CreateGame()
     {
         LoadGameMap();
+
+        GameCamera.Create();
+
+        m_isRunning = true;
     }
 
     public void CreatePlayer(uint playerId)
@@ -40,7 +50,7 @@ public class GameManager : ServiceModule<GameManager> {
         return -1;
     }
 
-    private SnakePlayer GetPlayer(uint playerId)
+    public SnakePlayer GetPlayer(uint playerId)
     {
         int index = GetPlayerIndex(playerId);
         if (index >= 0)

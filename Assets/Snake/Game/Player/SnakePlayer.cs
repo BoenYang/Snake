@@ -11,6 +11,8 @@ public class SnakePlayer
 
     public uint Id;
 
+    public SnakeHead Head { get { return m_head; } }
+
     public void Create(uint id)
     {
 

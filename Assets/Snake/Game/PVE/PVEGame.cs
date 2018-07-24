@@ -16,12 +16,12 @@ public class PVEGame
         GameInput.Create();
         GameInput.OnVkey += OnVKey;
 
+        GameCamera.FocusPlayerId = m_mainPlayerId;
         MonoHelper.instance.AddFixedUpdateEvent(this.FixedUpdate);
     }
 
     private void OnVKey(int vkey, float args)
     {
-        Debug.Log(vkey + " " + args);
         GameManager.Instance.InputVKey(vkey,args,m_mainPlayerId);
     }
 

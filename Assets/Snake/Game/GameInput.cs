@@ -63,7 +63,6 @@ public class GameInput : MonoBehaviour
         {
             HandleVKey(GameVKey.MoveX, move.joystickValue.x);
             HandleVKey(GameVKey.MoveY, move.joystickValue.y);
-            Debug.Log(move.joystickValue);
         }
     }
 
@@ -116,7 +115,7 @@ public class GameInput : MonoBehaviour
         }
         else
         {
-            if (m_MapKeyState.ContainsKey(key))
+            if (m_MapKeyState.ContainsKey(key) && m_MapKeyState[key] == true)
             {
                 m_MapKeyState[key] = false;
                 HandleVKey(release_vkey, release_args); //转为虚拟按键
@@ -131,6 +130,7 @@ public class GameInput : MonoBehaviour
         HandleKey(KeyCode.D, GameVKey.MoveX, 1, GameVKey.MoveX, 0);
         HandleKey(KeyCode.W, GameVKey.MoveY, 1, GameVKey.MoveY, 0);
         HandleKey(KeyCode.S, GameVKey.MoveY, -1, GameVKey.MoveY, 0);
+        HandleKey(KeyCode.Space,GameVKey.SpeedUp,2, GameVKey.SpeedUp,1);
     }
 
 }
