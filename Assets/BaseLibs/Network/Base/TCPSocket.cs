@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine;
 
 public class TCPSocket
 {
@@ -18,7 +19,9 @@ public class TCPSocket
 
     private byte[] m_recive_buffer = new byte[4096];
 
-    private Dictionary<EndPoint,TCPSocket> m_client_sockets = new Dictionary<EndPoint, TCPSocket>(); 
+    private Dictionary<EndPoint,TCPSocket> m_client_sockets = new Dictionary<EndPoint, TCPSocket>();
+
+    private bool m_isClient = false;
 
     public TCPSocket(AddressFamily family = AddressFamily.InterNetwork)
     {
@@ -30,11 +33,20 @@ public class TCPSocket
         m_socket = socket;
     }
 
+    public void Bind(int port)
+    {
+        IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
+        m_socket.Bind(endPoint);
+        m_socket.Listen(int.MaxValue);
+        m_socket.BeginAccept(this.OnClientConnect, null);
+        Debug.Log("ser start");
+    }
+
     public void Connect(IPEndPoint remotePoint)
     {
+        m_isClient = true;
         m_socket.Connect(remotePoint);
-        m_socket.BeginAccept(this.OnClientConnect, null);
-
+        m_socket.BeginReceive(m_recive_buffer, 0, m_recive_buffer.Length, SocketFlags.None, this.OnRecived, m_socket);
     }
 
 
@@ -80,6 +92,7 @@ public class TCPSocket
         {
             m_OnClientConnect(socket);
         }
+        Debug.Log("client connected");
     }
 
     private void OnRecived(IAsyncResult result)
@@ -87,19 +100,37 @@ public class TCPSocket
         Socket client = result.AsyncState as Socket;
         int len = client.EndReceive(result);
 
+   
+
         byte[] dst = new byte[len];
         Array.Copy(m_recive_buffer,dst,dst.Length);
-       
 
-        if (m_client_sockets.ContainsKey(client.RemoteEndPoint))
+        if (!this.m_isClient)
         {
-            TCPSocket socket = m_client_sockets[client.RemoteEndPoint];
-
-            if (m_OnRecive != null)
+            if (len == 0)
             {
-                m_OnRecive(socket, dst);
+                Debug.Log("client disconnect");
+                return;
+            }
+
+            if (m_client_sockets.ContainsKey(client.RemoteEndPoint))
+            {
+                TCPSocket socket = m_client_sockets[client.RemoteEndPoint];
+
+                if (m_OnRecive != null)
+                {
+                    m_OnRecive(socket, dst);
+                }
             }
         }
+        else
+        {
+            if (m_OnRecive != null)
+            {
+                m_OnRecive(null, dst);
+            }
+        }
+
 
         client.BeginReceive(m_recive_buffer, 0, m_recive_buffer.Length, SocketFlags.None, this.OnRecived, client);
 
