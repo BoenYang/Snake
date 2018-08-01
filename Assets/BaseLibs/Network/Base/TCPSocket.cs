@@ -10,16 +10,21 @@ public class TCPSocket
 
     public delegate void ClientConnectCallBack(TCPSocket socket);
     public delegate void ReciveCallBack(TCPSocket socket,byte[] data);
+    public delegate void ClientDisconnectCallBack(TCPSocket socket);
 
-    private Socket m_socket;
 
     private event ClientConnectCallBack m_OnClientConnect;
 
     private event ReciveCallBack m_OnRecive;
 
-    private byte[] m_recive_buffer = new byte[4096];
+    private event ClientDisconnectCallBack m_OnClientDisconnect;
+
+    private Socket m_socket;
 
     private Dictionary<EndPoint,TCPSocket> m_client_sockets = new Dictionary<EndPoint, TCPSocket>();
+    
+
+    private byte[] m_recive_buffer = new byte[4096];
 
     private bool m_isClient = false;
 
@@ -73,9 +78,9 @@ public class TCPSocket
         this.m_OnClientConnect += listener;
     }
 
-    public void AddClientDisconnectListener()
+    public void AddClientDisconnectListener(ClientDisconnectCallBack listener)
     {
-
+        this.m_OnClientDisconnect += listener;
     }
 
     private void OnClientConnect(IAsyncResult result)
@@ -86,7 +91,7 @@ public class TCPSocket
 
         TCPSocket socket = new TCPSocket(client);
 
-        m_client_sockets.Add(client.RemoteEndPoint,socket);
+        m_client_sockets.Add(client.RemoteEndPoint, socket);
 
         if (m_OnClientConnect != null)
         {
@@ -95,11 +100,18 @@ public class TCPSocket
         Debug.Log("client connected");
     }
 
+    private void OnClientDisconnect(TCPSocket socket)
+    {
+        if (m_OnClientDisconnect != null)
+        {
+            m_OnClientDisconnect(socket);
+        }
+    }
+
     private void OnRecived(IAsyncResult result)
     {
         Socket client = result.AsyncState as Socket;
         int len = client.EndReceive(result);
-
    
 
         byte[] dst = new byte[len];
@@ -107,14 +119,15 @@ public class TCPSocket
 
         if (!this.m_isClient)
         {
-            if (len == 0)
-            {
-                Debug.Log("client disconnect");
-                return;
-            }
-
             if (m_client_sockets.ContainsKey(client.RemoteEndPoint))
             {
+                if (len == 0)
+                {
+                    OnClientDisconnect(m_client_sockets[client.RemoteEndPoint]);
+                    m_client_sockets.Remove(client.RemoteEndPoint);
+                    return;
+                }
+
                 TCPSocket socket = m_client_sockets[client.RemoteEndPoint];
 
                 if (m_OnRecive != null)
@@ -135,5 +148,6 @@ public class TCPSocket
         client.BeginReceive(m_recive_buffer, 0, m_recive_buffer.Length, SocketFlags.None, this.OnRecived, client);
 
     }
+
 
 }

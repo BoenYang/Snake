@@ -68,6 +68,6 @@ public class SocketTest : MonoBehaviour
     private void onClientRecive(TCPSocket socket, byte[] data)
     {
         string s = System.Text.Encoding.UTF8.GetString(data);
-        Debug.Log("server revice " + s);
+        Debug.Log("client revice " + s);
     }
 }
