@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using ProtoBuf;
 using UnityEngine;
 
 public class FPSServer
@@ -32,7 +34,9 @@ public class FPSServer
 
         m_IsRunning = true;
         m_ThreadMain = new Thread(Thead_Main) { IsBackground = true};
-        m_ThreadMain.Start();
+        //m_ThreadMain.Start();
+
+        Debug.Log("[FSPServer] Server Start ");
 
         return true;
     }
@@ -41,6 +45,7 @@ public class FPSServer
     {
         FSPSession session = new FSPSession(socket);
         m_sessions.Add(socket,session);
+        Debug.Log("[FSPServer] Client Connect ");
     }
 
     private void OnClientRecive(TCPSocket socket, byte[] data)
@@ -71,7 +76,10 @@ public class FPSServer
 
     private void HandleRecive()
     {
-
+        foreach (var fspSession in m_sessions)
+        {
+            fspSession.Value.HandleRecive();
+        }
     }
 
     private void DoMainLoop()

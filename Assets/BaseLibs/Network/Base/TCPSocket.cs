@@ -44,7 +44,7 @@ public class TCPSocket
         m_socket.Bind(endPoint);
         m_socket.Listen(int.MaxValue);
         m_socket.BeginAccept(this.OnClientConnect, null);
-        Debug.Log("ser start");
+        Debug.Log("[TCPSocket] Server started");
     }
 
     public void Connect(IPEndPoint remotePoint)
@@ -97,7 +97,7 @@ public class TCPSocket
         {
             m_OnClientConnect(socket);
         }
-        Debug.Log("client connected");
+        Debug.Log("[TCPSocket] Client connected");
     }
 
     private void OnClientDisconnect(TCPSocket socket)
