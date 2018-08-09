@@ -48,6 +48,11 @@ public class FSPSession
         m_OnReciveData += listener;
     }
 
+    public void RemoveReciveListener(OnReciveData listener)
+    {
+        m_OnReciveData -= listener;
+    }
+
     public void HandleRecive()
     {
         SwitchQueue();

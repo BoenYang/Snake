@@ -27,3 +27,19 @@ public class EnterRoomResponse
     [ProtoMember(1)]
     public int code;
 }
+
+[ProtoContract]
+public class FSPFrame
+{
+
+}
+
+[ProtoContract]
+public class FSPVkey
+{
+    public int vkey;
+
+    public int[] args;
+
+
+}

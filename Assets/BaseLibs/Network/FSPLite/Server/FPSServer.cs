@@ -36,6 +36,8 @@ public class FPSServer
         m_ThreadMain = new Thread(Thead_Main) { IsBackground = true};
         //m_ThreadMain.Start();
 
+        m_Game = new FSPGame();
+
         Debug.Log("[FSPServer] Server Start ");
 
         return true;
