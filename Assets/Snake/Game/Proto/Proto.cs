@@ -24,6 +24,8 @@ public class EnterRoomRequest
 [ProtoContract]
 public class EnterRoomResponse
 {
+    public uint cmd = Command.EnterRoom;
+
     [ProtoMember(1)]
     public int code;
 }
@@ -31,6 +33,8 @@ public class EnterRoomResponse
 [ProtoContract]
 public class FSPFrame
 {
+    public uint cmd = Command.FSPFrame;
+
 
 }
 
