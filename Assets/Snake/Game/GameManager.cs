@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using FrameWork.Core;
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
 public class GameManager : ServiceModule<GameManager> {

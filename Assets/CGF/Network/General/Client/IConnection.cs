@@ -1,19 +1,25 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CGF.Network.Client { 
+namespace CGF.Network.General.Client { 
 
     public interface IConnection
     {
+        Action<byte[], int> OnRecive { get; set; }
 
         bool Connected { get; }
 
-        string Ip { get; }
+        int BindPort { get; }
 
-        int Port { get; }
+        int Id { get; }
+
+        void Init(int connId, int bindPort);
 
         void Connect(string ip,int port);
+
+        void Clean();
 
         void Close();
 

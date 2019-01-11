@@ -6,19 +6,18 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using UnityEngine.Assertions.Must;
 
-namespace CGF.Network.Client
+namespace CGF.Network.General.Client
 {
     public class TCPConnection : IConnection
     {
-        public Action<byte[],int> OnRecive;
-       
-        public bool Connected{ get { return m_connected; } }
+        public Action<byte[], int> OnRecive { get; set; }
 
-        public string Ip { get { return m_ip; }}
-        public int Port { get { return m_port; }}
+        public bool Connected { get; private set; }
+        public int BindPort { get; private set; }
+        public int Id { get; private set; }
 
-        private bool m_connected;
 
         private Socket m_socket;
 
@@ -30,21 +29,33 @@ namespace CGF.Network.Client
 
         private int m_port;
 
+        public void Init(int connId, int bindPort)
+        {
+            BindPort = bindPort;
+            Id = connId;
+        }
+
         public void Connect(string ip, int port)
         {
+            Connected = false;
             m_ip = ip;
             m_port = port;
-            m_remoteEndPoint = new IPEndPoint(IPAddress.Parse(ip),port);
+            m_remoteEndPoint = new IPEndPoint(IPAddress.Parse(m_ip),m_port);
             m_socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.IPv4);
             m_socket.Connect(m_remoteEndPoint);
-            m_connected = true;
             m_reciveThread = new Thread(Thread_Recive);
             m_reciveThread.Start();
+            Connected = true;
+        }
+
+        public void Clean()
+        {
+            this.Close();
         }
 
         public void Close()
         {
-            m_connected = false;
+            Connected = false;
             
             if (m_socket != null)
             {
@@ -71,7 +82,7 @@ namespace CGF.Network.Client
             }
             else
             {
-                //TODO 重连
+                //TODO 重连逻辑
             }
         }
 
@@ -90,7 +101,6 @@ namespace CGF.Network.Client
         private Queue<byte[]> m_productQueue = new Queue<byte[]>();
 
         private Queue<byte[]> m_consumeQueue = new Queue<byte[]>();
-
 
         private void Thread_Recive()
         {
