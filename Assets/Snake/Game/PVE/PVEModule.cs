@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using CGF.Core;
+using UnityEngine;
 
 public class PVEModule : BusinessModule
 {

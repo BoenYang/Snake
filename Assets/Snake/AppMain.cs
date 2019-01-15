@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using CGF.Core;
 using UnityEngine;
 
 public class AppMain : MonoBehaviour {

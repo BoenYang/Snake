@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using CGF.Common;
 using UnityEngine;
 
-public class UIManager : ServiceModule<UIManager> {
+public class UIManager : Singleton<UIManager> {
 
     protected class PageTrack
     {

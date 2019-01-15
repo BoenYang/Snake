@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CGF.CGF.Common;
+using CGF.Common;
 
 namespace CGF.Core
 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using CGF.Network.Core;
 using CGF.Network.Core.RPC;
+using SGF.Codec;
 
 namespace CGF.Network.General.Server
 {
@@ -62,7 +63,7 @@ namespace CGF.Network.General.Server
             msg.head.cmd = cmd;
             msg.head.index = index;
             msg.head.uid = session.uid;
-            msg.content = new byte[100];
+            msg.content = PBSerializer.NSerialize(rsp);
             msg.head.dataSize = (uint)msg.content.Length;
 
             byte[] temp;
@@ -95,7 +96,8 @@ namespace CGF.Network.General.Server
                     {
                         if (rawArgs[i].type == RPCArgType.PBObject)
                         {
-                            args[i + 1] = rawArgs[i].value;
+                            Type type = parameterInfo.GetType();
+                            args[i + 1] = PBSerializer.NDeserialize(rawArgs[i].raw_value,type);
                         }
                         else
                         {
@@ -110,17 +112,17 @@ namespace CGF.Network.General.Server
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        Debuger.LogError(e);
                     }
                 }
                 else
                 {
-                    Console.WriteLine("参数数量不一致");
+                    Debuger.LogError("参数数量不一致");
                 }
             }
             else
             {
-                Console.WriteLine("没找到{0}的方法",rpcMsg.name);
+                Debuger.LogError("没找到{0}的方法",rpcMsg.name);
             }
         }
 
@@ -130,7 +132,7 @@ namespace CGF.Network.General.Server
             rpcMsg.name = name;
             rpcMsg.args = args;
 
-            byte[] buffer = new byte[100];
+            byte[] buffer = PBSerializer.NSerialize(rpcMsg);
 
             NetMessage msg = new NetMessage();
             msg.content = buffer;
@@ -140,7 +142,6 @@ namespace CGF.Network.General.Server
 
             byte[] temp = null;
             int len = msg.Serialize(out temp);
-
             session.Send(temp,len);
         }
 
@@ -163,7 +164,15 @@ namespace CGF.Network.General.Server
             GeneralMsgListener listener = m_generalMsgListeners[msg.head.cmd];
             if (listener != null)
             {
-                listener.onMsg.DynamicInvoke(session,msg.head.index, msg);
+                object obj = PBSerializer.NDeserialize(msg.content, listener.msgType);
+                if (obj != null)
+                {
+                    listener.onMsg.DynamicInvoke(session, msg.head.index, obj);
+                }
+                else
+                {
+                    Debuger.LogError("协议解析失败");
+                }
             }
         }
 

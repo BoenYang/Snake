@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ProtoBuf;
 
 namespace CGF.Network.Core.RPC
 {
+    [ProtoContract]
     public class RPCMessage
     {
+        [ProtoMember(1)]
         public string name;
 
+        [ProtoMember(2)]
         public List<RPCRawArg> raw_args = new List<RPCRawArg>();
 
         public object[] args
@@ -36,9 +40,12 @@ namespace CGF.Network.Core.RPC
         }
     }
 
+    [ProtoContract]
     public class RPCRawArg
     {
+        [ProtoMember(1)]
         public RPCArgType type;
+        [ProtoMember(2)]
         public byte[] raw_value;
 
         public object value

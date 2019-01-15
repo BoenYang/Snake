@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using CGF.Common;
 using UnityEngine;
 
-public class GameManager : ServiceModule<GameManager> {
+public class GameManager : Singleton<GameManager> {
 
     private List<SnakePlayer> m_playerList = new List<SnakePlayer>();
 

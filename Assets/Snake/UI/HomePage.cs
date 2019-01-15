@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using CGF.Core;
 
 public class HomePage : UIPage {
 

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using CGF.Core;
 using UnityEngine.UI;
 
 public class PVEGamePage : UIPage

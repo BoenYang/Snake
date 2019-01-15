@@ -1,4 +1,6 @@
-﻿namespace CGF.Network.Core
+﻿using ProtoBuf;
+
+namespace CGF.Network.Core
 {
     public class ProtocalHead
     {

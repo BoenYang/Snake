@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using CGF.Network.Core;
 using CGF.Network.Core.RPC;
+using SGF.Codec;
 
 namespace CGF.Network.General.Client
 {
@@ -151,7 +152,7 @@ namespace CGF.Network.General.Client
             rpcMsg.name = name;
             rpcMsg.args = args;
 
-            byte[] buffer = new byte[100];
+            byte[] buffer = PBSerializer.NSerialize(rpcMsg);
 
             NetMessage msg = new NetMessage();
             msg.content = buffer;
@@ -168,11 +169,13 @@ namespace CGF.Network.General.Client
 
         class GeneralMsgListener
         {
+            public uint cmd;
             public float timeout;
             public Type rspType;
             public Delegate onRsp;
             public Delegate onError;
             public uint index;
+            public float timestamp;
         }
 
         class NotifyMsgListener
@@ -190,7 +193,7 @@ namespace CGF.Network.General.Client
             }
         }
 
-        private void AddGeneralMsgListener(uint index, Type rspType, Delegate onRsp, float timeout, Delegate onError)
+        private void AddGeneralMsgListener(uint cmd,uint index, Type rspType, Delegate onRsp, float timeout, Delegate onError)
         {
             GeneralMsgListener listener = new GeneralMsgListener();
             listener.timeout = timeout;
@@ -198,6 +201,7 @@ namespace CGF.Network.General.Client
             listener.onRsp = onRsp;
             listener.onError = onError;
             listener.index = index;
+            listener.cmd = cmd;
             m_generalMsgListeners.Add(index, listener);
         }
 
@@ -215,14 +219,14 @@ namespace CGF.Network.General.Client
             msg.head.cmd = cmd;
             msg.head.uid = m_uid;
             msg.head.index = MessageIndexGenerator.NewIndex();
-            msg.content = new byte[100];
+            msg.content = PBSerializer.NSerialize(req);
             msg.head.dataSize = (uint)msg.content.Length;
 
             byte[] tempBuf;
             int len = msg.Serialize(out tempBuf);
             m_connection.Send(tempBuf, len);
 
-            AddGeneralMsgListener(msg.head.index, typeof(TRsp), onRsp, timeout, onError);
+            AddGeneralMsgListener(cmd,msg.head.index, typeof(TRsp), onRsp, timeout, onError);
         }
 
         private void HandleGeneralMessage(NetMessage msg)
@@ -232,11 +236,19 @@ namespace CGF.Network.General.Client
                 NotifyMsgListener listener = m_notifyMsgListeners[msg.head.cmd];
                 if (listener != null)
                 {
-                    listener.onNotify.DynamicInvoke(msg);
+                    object obj = PBSerializer.NDeserialize(msg.content,listener.msgType);
+                    if (obj != null)
+                    {
+                        listener.onNotify.DynamicInvoke(obj);
+                    }
+                    else
+                    {
+                        Debuger.LogError(" 协议解析失败");
+                    }
                 }
                 else
                 {
-
+                    Debuger.LogError("找不到协议监听器");
                 }
             }
             else
@@ -246,13 +258,26 @@ namespace CGF.Network.General.Client
                 {
                     m_generalMsgListeners.Remove(msg.head.index);
 
-                    listener.onRsp.DynamicInvoke(msg);
+                    object obj = PBSerializer.NDeserialize(msg.content, listener.rspType);
+                    if (obj != null)
+                    {
+                        listener.onRsp.DynamicInvoke(obj);
+                    }
+                    else
+                    {
+                        Debuger.LogError(" 协议解析失败");
+                    }
                 }
                 else
                 {
-
+                    Debuger.LogError("找不到协议监听器");
                 }
             }
+        }
+
+        private void CheckTimeOut()
+        {
+
         }
 
 
