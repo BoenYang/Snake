@@ -8,6 +8,7 @@ namespace CGF.Network.Core
         public byte[] content;
 
         public static NetBufferReader DefaultReader = new NetBufferReader();
+        public static NetBufferReader DefaultWriter = new NetBufferReader();
 
         public NetMessage Deserialize(NetBuffer buffer)
         {
@@ -26,5 +27,22 @@ namespace CGF.Network.Core
             }
         }
 
+        public NetBuffer Serialize(NetBuffer buffer)
+        {
+            head.Serialize(buffer);
+            buffer.WriteBytes(content, 0, (int)head.dataSize);
+            return buffer;
+        }
+
+        public int Serialize(out byte[] tempBuffer)
+        {
+            lock (head)
+            {
+                DefaultWriter.Clear();
+                this.Deserialize(DefaultWriter);
+                tempBuffer = DefaultWriter.GetBytes();
+                return DefaultWriter.Length;
+            }
+        }
     }
 }

@@ -11,10 +11,18 @@
         public ProtocalHead Deserialize(NetBuffer buffer)
         {
             cmd = buffer.ReadUInt();
+            uid = buffer.ReadUInt();
             dataSize = buffer.ReadUInt();
             index = buffer.ReadUInt();
-            uid = buffer.ReadUInt();
             return this;
+        }
+
+        public void Serialize(NetBuffer buffer)
+        {
+            buffer.WriteUInt(cmd);
+            buffer.WriteUInt(uid);
+            buffer.WriteUInt(dataSize);
+            buffer.WriteUInt(index);
         }
     }
 }

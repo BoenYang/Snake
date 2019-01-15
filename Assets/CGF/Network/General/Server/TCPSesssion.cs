@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using CGF.Network.Core;
+using SGF.Network.Core;
 
 namespace CGF.Network.General.Server
 {
@@ -13,7 +15,11 @@ namespace CGF.Network.General.Server
 
         private Socket m_clientSocket;
 
-        public TCPSesssion(uint sid, Socket client)
+        private ISessionListener m_listener;
+
+        private SwitchQueue<byte[]> m_RecvBufQueue = new SwitchQueue<byte[]>();
+
+        public TCPSesssion(uint sid, Socket client, ISessionListener listener)
         {
             m_clientSocket = client;
             this.sid = sid;
@@ -25,6 +31,7 @@ namespace CGF.Network.General.Server
             {
                 m_clientSocket.Shutdown(SocketShutdown.Both);
             }
+
             m_clientSocket = arg as Socket;
         }
 
@@ -35,18 +42,38 @@ namespace CGF.Network.General.Server
 
         public void Send(byte[] bytes, int len)
         {
-            m_clientSocket.Send(bytes);
+            byte[] packageHead = new byte[8 + len];
+            NetBuffer buffer = new NetBuffer();
+            buffer.Attach(packageHead, packageHead.Length);
+            buffer.WriteUInt(sid);
+            buffer.WriteUInt((uint)(8 + len));
+            buffer.WriteBytes(bytes);
+            m_clientSocket.Send(buffer.GetBytes());
         }
-       
+
 
         public void DoReciveInGateway(byte[] bytes, int len)
         {
+            byte[] data = new byte[len];
+            Buffer.BlockCopy(bytes, 0, data, 0, len);
+            m_RecvBufQueue.Push(data);
+        }
 
+        private void DoReciveInMain()
+        {
+            m_RecvBufQueue.Switch();
+
+            while (!m_RecvBufQueue.Empty())
+            {
+                byte[] recvBufferRaw = m_RecvBufQueue.Pop();
+                m_listener.OnReceive(this, recvBufferRaw, recvBufferRaw.Length);
+
+            }
         }
 
         public void Tick()
         {
-
+            DoReciveInMain();
         }
     }
 }

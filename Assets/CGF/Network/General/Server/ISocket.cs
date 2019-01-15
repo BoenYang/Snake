@@ -11,6 +11,6 @@ namespace CGF.Network.General.Server
 
         void ShutDown();
 
-        ISession CreateSession(uint sid, object arg);
+        ISession CreateSession(ISessionListener listener,uint sid, object arg);
     }
 }

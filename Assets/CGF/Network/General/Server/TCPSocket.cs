@@ -30,9 +30,9 @@ namespace CGF.Network.General.Server
             m_Socket.Shutdown(SocketShutdown.Both);
         }
 
-        public ISession CreateSession(uint sid , object args)
+        public ISession CreateSession(ISessionListener listener,uint sid , object args)
         {
-            return new TCPSesssion(sid, args as Socket);
+            return new TCPSesssion(sid, args as Socket, listener);
         }
 
         private void OnAccept(IAsyncResult result)

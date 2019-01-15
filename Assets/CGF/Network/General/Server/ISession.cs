@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace CGF.Network.General.Server
 {
+
+    public interface ISessionListener
+    {
+        void OnReceive(ISession session, byte[] bytes, int len);
+    }
+
     public static class SessionID
     {
         private static uint ms_lastSid = 0;

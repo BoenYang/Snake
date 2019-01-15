@@ -11,11 +11,9 @@ namespace CGF.Network.General.Client {
 
         bool Connected { get; }
 
-        int BindPort { get; }
+        uint Id { get; }
 
-        int Id { get; }
-
-        void Init(int connId, int bindPort);
+        void Init();
 
         void Connect(string ip,int port);
 

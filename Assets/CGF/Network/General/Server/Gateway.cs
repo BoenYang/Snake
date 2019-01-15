@@ -19,10 +19,14 @@ namespace CGF.Network.General.Server
         private ISocket m_systemSocket;
 
 
-        public void Init(int port)
+        private ISessionListener m_sessionListener;
+
+        public void Init(int port,ISessionListener listener)
         {
             m_port = port;
+            m_sessionListener = listener;
             m_sessionMap = new Dictionary<uint, ISession>();
+            Start();
         }
 
         public void Start()
@@ -32,7 +36,7 @@ namespace CGF.Network.General.Server
             m_systemSocket.OnReceive = OnRecive;
         }
 
-        private void OnRecive(uint sid,byte[] bytes,int len , object arg)
+        private void OnRecive(uint sid, byte[] bytes,int len , object arg)
         {
             if (len > 0)
             {
@@ -43,7 +47,7 @@ namespace CGF.Network.General.Server
                     if (sid == 0)
                     {
                         uint newSid = SessionID.NewID();
-                        session = m_systemSocket.CreateSession(newSid, arg);
+                        session = m_systemSocket.CreateSession(m_sessionListener,newSid, arg);
                         m_sessionMap.Add(newSid, session);
                     }
                     else
@@ -72,7 +76,7 @@ namespace CGF.Network.General.Server
             }
         }
 
-        private void ClearNoActiveSession()
+        private void ClearNotActiveSession()
         {
 
         }

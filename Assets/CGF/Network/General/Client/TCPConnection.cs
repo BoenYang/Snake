@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using CGF.Network.Core;
+using SGF.Network.Core;
 using UnityEngine.Assertions.Must;
 
 namespace CGF.Network.General.Client
@@ -15,9 +17,8 @@ namespace CGF.Network.General.Client
         public Action<byte[], int> OnRecive { get; set; }
 
         public bool Connected { get; private set; }
-        public int BindPort { get; private set; }
-        public int Id { get; private set; }
 
+        public uint Id { get; private set; }
 
         private Socket m_socket;
 
@@ -29,10 +30,15 @@ namespace CGF.Network.General.Client
 
         private int m_port;
 
-        public void Init(int connId, int bindPort)
+        private SwitchQueue<byte[]> m_recvQueue;
+
+        private NetBuffer m_recvNetBuffer;
+
+        private byte[] m_recvBuffer = new byte[4096];
+
+        public void Init()
         {
-            BindPort = bindPort;
-            Id = connId;
+            m_recvQueue = new SwitchQueue<byte[]>();
         }
 
         public void Connect(string ip, int port)
@@ -56,22 +62,30 @@ namespace CGF.Network.General.Client
         public void Close()
         {
             Connected = false;
-            
-            if (m_socket != null)
-            {
-                m_socket.Shutdown(SocketShutdown.Both);
-                m_socket = null;
-            }
 
             if (m_reciveThread != null)
             {
                 m_reciveThread.Interrupt();
+                m_reciveThread = null;
+            }
+
+            if (m_socket != null)
+            {
+                m_socket.Shutdown(SocketShutdown.Both);
+                m_socket.Close();
+                m_socket = null;
             }
         }
 
         public bool Send(byte[] bytes, int len)
         {
-            return m_socket.Send(bytes, SocketFlags.None) > 0;
+            byte[] packageHead = new byte[8 + len];
+            NetBuffer buffer = new NetBuffer();
+            buffer.Attach(packageHead, packageHead.Length);
+            buffer.WriteUInt(Id);
+            buffer.WriteUInt((uint)(8 + len));
+            buffer.WriteBytes(bytes);
+            return m_socket.Send(buffer.GetBytes(), SocketFlags.None) > 0;
         }
 
         public void Tick()
@@ -88,19 +102,14 @@ namespace CGF.Network.General.Client
 
         private void DoReciveInMain()
         {
-            SwitchQueue();
-            while (m_consumeQueue.Count > 0)
+            m_recvQueue.Switch();
+            while (!m_recvQueue.Empty())
             {
-                byte[] buffer = m_consumeQueue.Dequeue();
+                byte[] buffer = m_recvQueue.Pop();
                 OnRecive(buffer, buffer.Length);
             }
         }
 
-        private byte[] m_reciveBuffer = new byte[4096];
-
-        private Queue<byte[]> m_productQueue = new Queue<byte[]>();
-
-        private Queue<byte[]> m_consumeQueue = new Queue<byte[]>();
 
         private void Thread_Recive()
         {
@@ -121,29 +130,47 @@ namespace CGF.Network.General.Client
         private void DoReciveInThread()
         {
             EndPoint remotePoint = new IPEndPoint(IPAddress.Any, 0);
-            int len = m_socket.ReceiveFrom(m_reciveBuffer, SocketFlags.None, ref remotePoint);
+            int len = m_socket.Receive(m_recvBuffer, SocketFlags.None);
 
             if (len > 0)
             {
                 if (m_remoteEndPoint.Equals(remotePoint))
                 {
-
-                    byte[] buffer = new byte[len];
-                    Buffer.BlockCopy(m_reciveBuffer, 0, buffer, 0, len);
-                    m_productQueue.Enqueue(buffer);
+                    if (m_recvNetBuffer.Length == 0)
+                    {
+                        m_recvNetBuffer.Attach(m_recvBuffer, len);
+                    }
+                    else
+                    {
+                        if (m_recvNetBuffer.Length + len > m_recvNetBuffer.Capacity)
+                        {
+                            m_recvNetBuffer.AdjustCapacity(m_recvNetBuffer.Length + len);
+                        }
+                        m_recvNetBuffer.AddBytes(m_recvBuffer, m_recvNetBuffer.Length - 1, len);
+                    }
+                    ReadPackage();
                 }
                 else
                 {
-
+                    //不是远程服务器的数据
                 }
             }
         }
 
-        private void SwitchQueue()
+        private void ReadPackage()
         {
-            Queue<byte[]> temp = m_consumeQueue;
-            m_consumeQueue = m_productQueue;
-            m_productQueue = temp;
+            byte[] temp = new byte[8];
+            m_recvNetBuffer.ReadBytes(temp, 0, 8);
+            Id = BitConverter.ToUInt32(temp, 0);
+            uint packageSize = BitConverter.ToUInt32(temp, 4);
+            while (m_recvNetBuffer.Length > packageSize)
+            {
+                byte[] package = new byte[packageSize - 8];
+                m_recvNetBuffer.ReadBytes(package, 0, (int)packageSize - 8);
+                m_recvNetBuffer.Arrangement();
+                m_recvQueue.Push(package);
+                ReadPackage();
+            }
         }
     }
 }
