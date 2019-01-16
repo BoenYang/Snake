@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 
-namespace CGF.Core
+namespace CGF.Module
 {
-    public abstract class Module
+    public abstract class ModuleBase
     {
         public virtual void Release()
         {

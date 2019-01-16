@@ -1,5 +1,5 @@
 ﻿
-namespace CGF.Core
+namespace CGF.Module
 {
     public static class GlobalEvent
     {

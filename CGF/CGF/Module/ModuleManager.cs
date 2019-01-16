@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using CGF.Common;
 
-namespace CGF.Core
+namespace CGF.Module
 {
     public class ModuleManager : Singleton<ModuleManager>
     {
 
-        private Dictionary<string, BusinessModule> m_moduleDict = new Dictionary<string, BusinessModule>();
+        private Dictionary<string, GeneralModule> m_moduleDict = new Dictionary<string, GeneralModule>();
 
         private string m_domain = "";
 
@@ -16,9 +16,9 @@ namespace CGF.Core
             m_domain = domain;
         }
 
-        public BusinessModule CreateModule(string moduleName, params object[] args)
+        public GeneralModule CreateModule(string moduleName, params object[] args)
         {
-            BusinessModule module = GetModule(moduleName);
+            GeneralModule module = GetModule(moduleName);
 
             if (module != null)
             {
@@ -36,7 +36,7 @@ namespace CGF.Core
 
             if (moduleType != null)
             {
-                module = Activator.CreateInstance(moduleType) as BusinessModule;
+                module = Activator.CreateInstance(moduleType) as GeneralModule;
             }
             else
             {
@@ -48,7 +48,7 @@ namespace CGF.Core
             return module;
         }
 
-        public BusinessModule GetModule(string moduleName)
+        public GeneralModule GetModule(string moduleName)
         {
             if (m_moduleDict.ContainsKey(moduleName))
             {

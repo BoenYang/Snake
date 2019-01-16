@@ -42,7 +42,7 @@ namespace CGF.Network.General.Client
             m_ip = ip;
             m_port = port;
             m_remoteEndPoint = new IPEndPoint(IPAddress.Parse(m_ip),m_port);
-            m_socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.IPv4);
+            m_socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
             m_socket.Connect(m_remoteEndPoint);
             m_reciveThread = new Thread(Thread_Recive);
             m_reciveThread.Start();

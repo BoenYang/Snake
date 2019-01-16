@@ -20,6 +20,7 @@ namespace CGF.Network.General.Server
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             m_Socket.Bind(new IPEndPoint(IPAddress.Any, port));
             m_Socket.Listen(port);
+            Debuger.Log("Listener at port " + port);
             m_Socket.BeginAccept(OnAccept, m_Socket);
 
             m_recvNetBuffer = new NetBuffer();
@@ -38,6 +39,7 @@ namespace CGF.Network.General.Server
         private void OnAccept(IAsyncResult result)
         {
             Socket client = m_Socket.EndAccept(result);
+            Debuger.Log("Accept a client " + client.RemoteEndPoint);
             m_Socket.BeginAccept(OnAccept, m_Socket);
             client.BeginReceive(m_recvBuf, 0, m_recvBuf.Length, SocketFlags.None, OnReceivePacket, client);
         }

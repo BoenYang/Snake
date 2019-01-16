@@ -1,7 +1,7 @@
-﻿using CGF.Core;
+﻿using CGF.Module;
 using UnityEngine;
 
-public class PVEModule : BusinessModule
+public class PVEModule : GeneralModule
 {
 
     private PVEGame m_game;
@@ -11,9 +11,9 @@ public class PVEModule : BusinessModule
         return m_game;
     }
 
-    public override void Show()
+    public override void Show(object arg)
     {
-        base.Show();
+        base.Show(arg);
         StartGame();
     }
 

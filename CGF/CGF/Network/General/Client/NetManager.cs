@@ -19,21 +19,23 @@ namespace CGF.Network.General.Client
 
         private Dictionary<uint, NotifyMsgListener> m_notifyMsgListeners;
 
-        public void Init(Type connectType,int connectId,int bindPort)
+        public void Init(Type connectType)
         {
+            Debuger.Log();
             //connect id 可以用于区别连接的网络连接的类型
             m_connection = Activator.CreateInstance(connectType) as IConnection;
             m_connection.Init();
 
-            m_generalMsgListeners = new Dictionary<uint, GeneralMsgListener>();
-            m_notifyMsgListeners = new Dictionary<uint, NotifyMsgListener>();
-
             m_rpc = new RPCManagerBase();
             m_rpc.Init();
+
+            m_generalMsgListeners = new Dictionary<uint, GeneralMsgListener>();
+            m_notifyMsgListeners = new Dictionary<uint, NotifyMsgListener>();
         }
 
         public void Connect(string ip,int port)
         {
+            Debuger.Log();
             m_connection.Connect(ip,port);
             m_connection.OnRecive += OnRecive;
         }
@@ -90,7 +92,6 @@ namespace CGF.Network.General.Client
                 HandleGeneralMessage( msg);
             }
         }
-
 
         public void AddRPCListener(object listener)
         {
@@ -166,7 +167,6 @@ namespace CGF.Network.General.Client
             m_connection.Send(temp, len);
         }
 
-
         class GeneralMsgListener
         {
             public uint cmd;
@@ -193,7 +193,15 @@ namespace CGF.Network.General.Client
             }
         }
 
-        private void AddGeneralMsgListener(uint cmd,uint index, Type rspType, Delegate onRsp, float timeout, Delegate onError)
+        public void AddNotifyMsgListener<TNtf>(uint cmd, Action<TNtf> onNotify)
+        {
+            NotifyMsgListener listener = new NotifyMsgListener();
+            listener.msgType = typeof(TNtf);
+            listener.onNotify = onNotify;
+
+        }
+
+        private void AddGeneralMsgListener(uint cmd, uint index, Type rspType, Delegate onRsp, float timeout, Delegate onError)
         {
             GeneralMsgListener listener = new GeneralMsgListener();
             listener.timeout = timeout;
@@ -205,15 +213,7 @@ namespace CGF.Network.General.Client
             m_generalMsgListeners.Add(index, listener);
         }
 
-        private void AddNotifyMsgListener<TNtf>(uint cmd, Action<TNtf> onNotify)
-        {
-            NotifyMsgListener listener = new NotifyMsgListener();
-            listener.msgType = typeof(TNtf);
-            listener.onNotify = onNotify;
-
-        }
-
-        private void Send<TReq, TRsp>(uint cmd, TReq req, Action<TRsp> onRsp, float timeout = 30, Action<uint> onError = null)
+        public void Send<TReq, TRsp>(uint cmd, TReq req, Action<TRsp> onRsp, float timeout = 30, Action<uint> onError = null)
         {
             NetMessage msg = new NetMessage();
             msg.head.cmd = cmd;
@@ -280,11 +280,9 @@ namespace CGF.Network.General.Client
 
         }
 
-
         public void Tick()
         {
             m_connection.Tick();
-
         }
     }
 }

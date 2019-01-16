@@ -18,6 +18,7 @@ namespace CGF.Network.General.Server
 
         public void Init(int port)
         {
+            Debuger.Log();
             m_generalMsgListeners = new Dictionary<uint, GeneralMsgListener>();
 
             m_gateWay = new Gateway();
