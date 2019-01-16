@@ -42,6 +42,7 @@ namespace CGF.Network.General.Client
 
         public void Clean()
         {
+            Debuger.Log();
             if (m_connection != null)
             {
                 m_connection.Clean();

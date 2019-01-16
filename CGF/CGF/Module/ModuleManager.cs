@@ -57,6 +57,14 @@ namespace CGF.Module
             return null;
         }
 
+        public void Clean()
+        {
+            foreach(GeneralModule module in m_moduleDict.Values) {
+                module.Release();
+            }
+            m_moduleDict.Clear();
+        }
+
     }
 }
 

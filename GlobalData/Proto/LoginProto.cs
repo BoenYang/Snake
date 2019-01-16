@@ -6,14 +6,16 @@ namespace GlobalData.Proto
     public class LoginReq
     {
         [ProtoMember(1)]
-        public uint id;
+        public string account;
 
-        [ProtoMember(1)]
-        public string name;
+        [ProtoMember(2)]
+        public string password;
     }
 
+    [ProtoContract]
     public class LoginRsp
     {
-
+        [ProtoMember(1)]
+        public string name;
     }
 }

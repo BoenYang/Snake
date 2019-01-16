@@ -34,6 +34,7 @@ namespace CGF.Network.General.Client
         public void Init()
         {
             m_recvQueue = new SwitchQueue<byte[]>();
+            m_recvNetBuffer = new NetBuffer();
         }
 
         public void Connect(string ip, int port)
@@ -47,6 +48,7 @@ namespace CGF.Network.General.Client
             m_reciveThread = new Thread(Thread_Recive);
             m_reciveThread.Start();
             Connected = true;
+            Debuger.Log("Connect to {0} port {1} success",ip,port);
         }
 
         public void Clean()
@@ -56,6 +58,7 @@ namespace CGF.Network.General.Client
 
         public void Close()
         {
+            Debuger.Log();
             Connected = false;
 
             if (m_reciveThread != null)
@@ -74,13 +77,20 @@ namespace CGF.Network.General.Client
 
         public bool Send(byte[] bytes, int len)
         {
-            byte[] packageHead = new byte[8 + len];
-            NetBuffer buffer = new NetBuffer();
-            buffer.Attach(packageHead, packageHead.Length);
-            buffer.WriteUInt(Id);
-            buffer.WriteUInt((uint)(8 + len));
-            buffer.WriteBytes(bytes);
-            return m_socket.Send(buffer.GetBytes(), SocketFlags.None) > 0;
+            try
+            {
+                Buffer.BlockCopy(bytes,0,bytes,8,len);
+                NetBuffer buffer = new NetBuffer();
+                buffer.Attach(bytes, 8 + len);
+                buffer.WriteUInt(Id,0);
+                buffer.WriteUInt((uint)(8 + len),4);
+                return m_socket.Send(buffer.GetBytes(),buffer.Length,SocketFlags.None) > 0;
+            }
+            catch (Exception e)
+            {
+                Debuger.Log("exception ");
+                return false;
+            }
         }
 
         public void Tick()
@@ -116,6 +126,7 @@ namespace CGF.Network.General.Client
                 }
                 catch (Exception e)
                 {
+                    Debuger.LogError(e.Message);
                     Thread.Sleep(1);
                 }
              
@@ -129,6 +140,7 @@ namespace CGF.Network.General.Client
 
             if (len > 0)
             {
+                Debuger.Log("Recive Data len = " + len);
                 if (m_remoteEndPoint.Equals(remotePoint))
                 {
                     if (m_recvNetBuffer.Length == 0)
@@ -154,17 +166,25 @@ namespace CGF.Network.General.Client
 
         private void ReadPackage()
         {
-            byte[] temp = new byte[8];
-            m_recvNetBuffer.ReadBytes(temp, 0, 8);
-            Id = BitConverter.ToUInt32(temp, 0);
-            uint packageSize = BitConverter.ToUInt32(temp, 4);
-            while (m_recvNetBuffer.Length > packageSize)
+            uint sid = m_recvNetBuffer.ReadUInt();
+            uint packageSize = m_recvNetBuffer.ReadUInt();
+            while (m_recvNetBuffer.Length >= packageSize)
             {
+                long restBufferLen = m_recvNetBuffer.Length - packageSize;
+                bool continueRead = restBufferLen > 0;
                 byte[] package = new byte[packageSize - 8];
                 m_recvNetBuffer.ReadBytes(package, 0, (int)packageSize - 8);
-                m_recvNetBuffer.Arrangement();
                 m_recvQueue.Push(package);
-                ReadPackage();
+                Debuger.Log("read a package ");
+                if (continueRead)
+                {
+                    m_recvNetBuffer.CopyWith(m_recvNetBuffer, 0, true);
+                    ReadPackage();
+                }
+                else
+                {
+                    m_recvNetBuffer.Clear();
+                }
             }
         }
     }

@@ -203,7 +203,10 @@ namespace CGF.Network.Core
             {
                 if (m_len + writeLen > m_capacity)
                 {
-                    throw new Exception("SGFBuffer out of capacity.");
+                    Debuger.Log(m_len);
+                    Debuger.Log(writeLen);
+                    Debuger.Log(m_capacity);
+                    throw new Exception("SGFBuffer out of capacity {0}.");
                 }
 
                 writePos = m_len;

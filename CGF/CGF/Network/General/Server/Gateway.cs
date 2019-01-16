@@ -42,14 +42,14 @@ namespace CGF.Network.General.Server
                         uint newSid = SessionID.NewID();
                         session = m_systemSocket.CreateSession(m_sessionListener,newSid, arg);
                         m_sessionMap.Add(newSid, session);
-                    }
-                    else
-                    {
-                        session.DoReciveInGateway(bytes,len);
+                        Debuger.Log("Create a Session sid = " + newSid);
                     }
 
                     if (session != null)
                     {
+
+                        Debuger.Log("Recive session data sid = " + sid);
+                        session.DoReciveInGateway(bytes, len);
                         session.Active(arg);
                     }
                 }

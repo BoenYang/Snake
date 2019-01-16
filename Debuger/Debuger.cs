@@ -27,7 +27,7 @@ namespace CGF
 
         public UnityDebugerConsole()
         {
-            Type type = Type.GetType("UnityEngine.Debug, UnieyEngine");
+            Type type = Type.GetType("UnityEngine.Debug, UnityEngine");
             m_miLog = type.GetMethod("Log", new Type[] {typeof(object)});
             m_miLogWaring = type.GetMethod("LogWarning", new Type[] { typeof(object) });
             m_miLogError = type.GetMethod("LogError", new Type[] { typeof(object) });

@@ -146,7 +146,7 @@ namespace CGF.Network.General.Server
             session.Send(temp,len);
         }
 
-        private void AddGeneralMsgListener<TMsg>(uint cmd, Action<ISession, uint, TMsg> onMsg)
+        public void AddGeneralMsgListener<TMsg>(uint cmd, Action<ISession, uint, TMsg> onMsg)
         {
             GeneralMsgListener listener = new GeneralMsgListener();
             listener.msgType = typeof(TMsg);
@@ -168,13 +168,25 @@ namespace CGF.Network.General.Server
                 object obj = PBSerializer.NDeserialize(msg.content, listener.msgType);
                 if (obj != null)
                 {
-                    listener.onMsg.DynamicInvoke(session, msg.head.index, obj);
+                    try
+                    {
+                        listener.onMsg.DynamicInvoke(session, msg.head.index, obj);
+                    }
+                    catch (Exception e)
+                    {
+                        Debuger.LogError(e.Message);
+                    }
                 }
                 else
                 {
                     Debuger.LogError("协议解析失败");
                 }
             }
+        }
+
+        public void Tick()
+        {
+            m_gateWay.Tick();
         }
 
     }

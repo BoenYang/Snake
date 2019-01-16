@@ -18,17 +18,13 @@ namespace CGF.Network.General.Server
 
         public TCPSesssion(uint sid, Socket client, ISessionListener listener)
         {
+            m_listener = listener;
             m_clientSocket = client;
             this.sid = sid;
         }
 
         public void Active(object arg)
         {
-            if (m_clientSocket != null)
-            {
-                m_clientSocket.Shutdown(SocketShutdown.Both);
-            }
-
             m_clientSocket = arg as Socket;
         }
 
@@ -39,13 +35,12 @@ namespace CGF.Network.General.Server
 
         public void Send(byte[] bytes, int len)
         {
-            byte[] packageHead = new byte[8 + len];
+            Buffer.BlockCopy(bytes, 0, bytes, 8, len);
             NetBuffer buffer = new NetBuffer();
-            buffer.Attach(packageHead, packageHead.Length);
-            buffer.WriteUInt(sid);
-            buffer.WriteUInt((uint)(8 + len));
-            buffer.WriteBytes(bytes);
-            m_clientSocket.Send(buffer.GetBytes());
+            buffer.Attach(bytes, 8 + len);
+            buffer.WriteUInt(sid, 0);
+            buffer.WriteUInt((uint)(8 + len), 4);
+            m_clientSocket.Send(buffer.GetBytes(),len + 8,SocketFlags.None);
         }
 
 

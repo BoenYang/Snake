@@ -40,8 +40,8 @@ namespace CGF.Network.General.Server
         {
             Socket client = m_Socket.EndAccept(result);
             Debuger.Log("Accept a client " + client.RemoteEndPoint);
-            m_Socket.BeginAccept(OnAccept, m_Socket);
             client.BeginReceive(m_recvBuf, 0, m_recvBuf.Length, SocketFlags.None, OnReceivePacket, client);
+            m_Socket.BeginAccept(OnAccept, m_Socket);
         }
 
 
@@ -51,6 +51,8 @@ namespace CGF.Network.General.Server
             int len = client.EndReceive(result);
             if (len > 0)
             {
+                Debuger.Log("Recive Data len = " + len);
+                client.BeginReceive(m_recvBuf, 0, m_recvBuf.Length, SocketFlags.None, OnReceivePacket, client);
                 lock (m_recvNetBuffer)
                 {
                     if (m_recvNetBuffer.Length == 0)
@@ -67,22 +69,32 @@ namespace CGF.Network.General.Server
                     }
                     ReadPackage(client);
                 }
+              
             }
+         
         }
 
         private void ReadPackage(Socket client)
         {
-            byte[] temp = new byte[8];
-            m_recvNetBuffer.ReadBytes(temp, 0, 8);
-            uint sid = BitConverter.ToUInt32(temp, 0);
-            uint packageSize = BitConverter.ToUInt32(temp, 4);
-            while (m_recvNetBuffer.Length > packageSize)
+            uint sid = m_recvNetBuffer.ReadUInt();
+            uint packageSize = m_recvNetBuffer.ReadUInt();
+            while (m_recvNetBuffer.Length >= packageSize)
             {
+                long restBufferLen = m_recvNetBuffer.Length - packageSize;
+                bool continueRead = restBufferLen > 0;
                 byte[] package = new byte[packageSize - 8];
                 m_recvNetBuffer.ReadBytes(package, 0, (int)packageSize - 8);
-                m_recvNetBuffer.Arrangement();
-                OnReceive(sid, package,(int)(packageSize - 8), client);
-                ReadPackage(client);
+                OnReceive(sid, package, (int)(packageSize - 8), client);
+
+                if (continueRead)
+                {
+                    m_recvNetBuffer.CopyWith(m_recvNetBuffer, 0,true);
+                    ReadPackage(client);
+                }
+                else
+                {
+                    m_recvNetBuffer.Clear();
+                }
             }
         }
 

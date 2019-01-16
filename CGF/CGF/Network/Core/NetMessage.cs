@@ -7,8 +7,8 @@ namespace CGF.Network.Core
         public ProtocalHead head = new ProtocalHead();
         public byte[] content;
 
-        public static NetBufferReader DefaultReader = new NetBufferReader();
-        public static NetBufferReader DefaultWriter = new NetBufferReader();
+        public static NetBuffer DefaultReader = new NetBuffer(4096);
+        public static NetBuffer DefaultWriter = new NetBuffer(4096);
 
         public NetMessage Deserialize(NetBuffer buffer)
         {
@@ -36,10 +36,10 @@ namespace CGF.Network.Core
 
         public int Serialize(out byte[] tempBuffer)
         {
-            lock (head)
+            lock (DefaultWriter)
             {
                 DefaultWriter.Clear();
-                this.Deserialize(DefaultWriter);
+                this.Serialize(DefaultWriter);
                 tempBuffer = DefaultWriter.GetBytes();
                 return DefaultWriter.Length;
             }
