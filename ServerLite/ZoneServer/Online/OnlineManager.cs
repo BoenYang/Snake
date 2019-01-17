@@ -13,6 +13,8 @@ namespace Snake.Server.ZoneServer.Online
         {
             m_net = context.net;
             m_net.AddGeneralMsgListener<LoginReq>(ProtoCmd.LoginReq , OnLoginReq);
+
+            m_net.AddRPCListener(this);
         }
 
         private void OnLoginReq(ISession session, uint index, LoginReq req)
@@ -26,6 +28,12 @@ namespace Snake.Server.ZoneServer.Online
         public void Tick()
         {
             m_net.Tick();
+        }
+
+
+        public void Test(ISession session,string test)
+        {
+            m_net.Invoke(session,"OnTest",test);
         }
     }
 }

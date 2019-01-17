@@ -141,8 +141,8 @@ namespace CGF.Network.General.Client
             if (len > 0)
             {
                 Debuger.Log("Recive Data len = " + len);
-                if (m_remoteEndPoint.Equals(remotePoint))
-                {
+                //if (m_remoteEndPoint.Equals(remotePoint))
+                //{
                     if (m_recvNetBuffer.Length == 0)
                     {
                         m_recvNetBuffer.Attach(m_recvBuffer, len);
@@ -156,11 +156,11 @@ namespace CGF.Network.General.Client
                         m_recvNetBuffer.AddBytes(m_recvBuffer, m_recvNetBuffer.Length - 1, len);
                     }
                     ReadPackage();
-                }
-                else
-                {
+                //}
+                //else
+                //{
                     //不是远程服务器的数据
-                }
+                //}
             }
         }
 
@@ -168,6 +168,7 @@ namespace CGF.Network.General.Client
         {
             uint sid = m_recvNetBuffer.ReadUInt();
             uint packageSize = m_recvNetBuffer.ReadUInt();
+            Debuger.Log("read package sid {0} , package size {1}",sid,packageSize);
             while (m_recvNetBuffer.Length >= packageSize)
             {
                 long restBufferLen = m_recvNetBuffer.Length - packageSize;
@@ -175,7 +176,6 @@ namespace CGF.Network.General.Client
                 byte[] package = new byte[packageSize - 8];
                 m_recvNetBuffer.ReadBytes(package, 0, (int)packageSize - 8);
                 m_recvQueue.Push(package);
-                Debuger.Log("read a package ");
                 if (continueRead)
                 {
                     m_recvNetBuffer.CopyWith(m_recvNetBuffer, 0, true);

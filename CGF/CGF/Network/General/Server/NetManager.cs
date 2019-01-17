@@ -49,7 +49,7 @@ namespace CGF.Network.General.Server
 
             if (msg.head.cmd == 0)
             {
-                RPCMessage rpcMsg = new RPCMessage();
+                RPCMessage rpcMsg = PBSerializer.NDeserialize<RPCMessage>(msg.content);
                 HandleRPCMessage(session,rpcMsg);
             }
             else
@@ -90,8 +90,8 @@ namespace CGF.Network.General.Server
                 object[] args = new object[rpcMsg.raw_args.Count + 1];
                 List<RPCRawArg> rawArgs = rpcMsg.raw_args;
                 ParameterInfo[] parameterInfo = helper.method.GetParameters();
-
-                if (parameterInfo.Length == rawArgs.Count)
+                args[0] = session;
+                if (parameterInfo.Length == (rawArgs.Count + 1))
                 {
                     for (int i = 0; i < rawArgs.Count; i++)
                     {

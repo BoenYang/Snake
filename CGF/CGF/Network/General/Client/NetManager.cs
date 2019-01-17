@@ -85,7 +85,7 @@ namespace CGF.Network.General.Client
             msg.Deserialize(data, len);
             if (msg.head.cmd == 0)
             {
-                RPCMessage rpcMsg = new RPCMessage();
+                RPCMessage rpcMsg = PBSerializer.NDeserialize<RPCMessage>(msg.content);
                 HandleRPCMessage( rpcMsg);
             }
             else
@@ -109,21 +109,18 @@ namespace CGF.Network.General.Client
             RPCMethodHelper helper = m_rpc.GetRPCMethodHelper(rpcMsg.name);
             if (helper != null)
             {
-                object[] args = new object[rpcMsg.raw_args.Count + 1];
+                object[] args = rpcMsg.args;
                 List<RPCRawArg> rawArgs = rpcMsg.raw_args;
                 ParameterInfo[] parameterInfo = helper.method.GetParameters();
-
                 if (parameterInfo.Length == rawArgs.Count)
                 {
                     for (int i = 0; i < rawArgs.Count; i++)
                     {
                         if (rawArgs[i].type == RPCArgType.PBObject)
                         {
-
-                        }
-                        else
-                        {
-                            args[i + 1] = rawArgs[i].value;
+                            var type = parameterInfo[i].ParameterType;
+                            object arg = PBSerializer.NDeserialize(rawArgs[i].raw_value, type);
+                            args[i] = arg;
                         }
                     }
 
@@ -232,6 +229,7 @@ namespace CGF.Network.General.Client
 
         private void HandleGeneralMessage(NetMessage msg)
         {
+            Debuger.Log("Handle general message cmd = {0} index = {1}",msg.head.cmd,msg.head.index);
             if (msg.head.index == 0)
             {
                 NotifyMsgListener listener = m_notifyMsgListeners[msg.head.cmd];
@@ -258,7 +256,6 @@ namespace CGF.Network.General.Client
                 if (listener != null)
                 {
                     m_generalMsgListeners.Remove(msg.head.index);
-
                     object obj = PBSerializer.NDeserialize(msg.content, listener.rspType);
                     if (obj != null)
                     {
