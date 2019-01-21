@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using CGF.Network.General.Client;
 using SGF.Codec;
 
-namespace CGF.CGF.Network.FSPLite.Client
+namespace CGF.Network.FSPLite.Client
 {
     public class FSPClient : TCPConnection
     {
@@ -53,8 +53,6 @@ namespace CGF.CGF.Network.FSPLite.Client
                     {
                         m_RecvListener(data.frames[i]);
                     }
-
-              
                 }
             }
         }

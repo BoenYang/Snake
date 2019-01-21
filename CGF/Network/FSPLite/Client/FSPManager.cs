@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO.Pipes;
-using System.Runtime.InteropServices;
-using CGF.Network.FSPLite.Client;
+﻿using System;
+using System.Collections.Generic;
 
-namespace CGF.CGF.Network.FSPLite.Client
+namespace CGF.Network.FSPLite.Client
 {
     public class FSPManager
     {
@@ -21,6 +19,8 @@ namespace CGF.CGF.Network.FSPLite.Client
 
         private FSPFrame m_nextLocalFrame;
 
+        private Action<int, FSPFrame> m_frameListener;
+
         public void Start(FSPParam param)
         {
             m_param = param;
@@ -32,7 +32,7 @@ namespace CGF.CGF.Network.FSPLite.Client
             else
             {
                 m_client = new FSPClient();
-                m_client.Init(0);
+                m_client.Init(m_param.sid);
                 m_client.SetFSPListener(OnReceiveFrame);
                 m_lockedFrameIndex = param.clientFrameRateMultiple;
             }
@@ -60,9 +60,17 @@ namespace CGF.CGF.Network.FSPLite.Client
             
         }
 
+        public void SetFrameListener(Action<int,FSPFrame> listener)
+        {
+            m_frameListener = listener;
+        }
+
         private void ExcuteFrame(int frameId,FSPFrame frame)
         {
-
+            if (m_frameListener != null)
+            {
+                m_frameListener(frameId, frame);
+            }
         }
 
         public void SendFSP(int cmd, params int[] args)
@@ -96,8 +104,6 @@ namespace CGF.CGF.Network.FSPLite.Client
 
         public void Tick()
         {
-            m_client.Tick();
-
             if (m_param.useLocal)
             {
                 if (m_currentFrameIndex < m_lockedFrameIndex)

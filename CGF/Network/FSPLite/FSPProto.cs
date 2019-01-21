@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 
-namespace CGF.CGF.Network.FSPLite
+namespace CGF.Network.FSPLite
 {
 
     public class FSPParam
     {
         public string host;
         public int port;
+        public uint sid;
         public bool useLocal = false;
         public int serverFrameInterval = 66;
         public int clientFrameRateMultiple = 2;

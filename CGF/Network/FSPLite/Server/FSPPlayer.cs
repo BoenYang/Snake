@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CGF.CGF.Network.FSPLite;
 using CGF.Network.General.Server;
 using SGF.Codec;
 
@@ -21,12 +20,19 @@ namespace CGF.Network.FSPLite.Server
 
         private byte[] m_sendBuffer = new byte[4096];
 
-        public void Create(uint uid, ISession session,Action<FSPPlayer,FSPMessage> listener)
+        public void Create(uint uid, ISession session, Action<FSPPlayer,FSPMessage> listener)
         {
             this.uid = uid;
             m_session = session;
             m_session.SetReceiveListener(this);
             m_msgListener = listener;
+        }
+
+        public void Release()
+        {
+            m_session.SetReceiveListener(null);
+            m_frameCache.Clear();
+
         }
 
         public void OnReceive(ISession session, byte[] bytes, int len)
@@ -36,7 +42,10 @@ namespace CGF.Network.FSPLite.Server
                 FSPDataC2S data = PBSerializer.NDeserialize<FSPDataC2S>(bytes);
                 for (int i = 0; i < data.msgs.Count; i++)
                 {
-                    m_msgListener(this, data.msgs[i]);
+                    if (m_msgListener != null)
+                    {
+                        m_msgListener(this, data.msgs[i]);
+                    }
                 }
             }
         }

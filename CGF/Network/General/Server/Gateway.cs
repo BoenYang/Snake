@@ -34,7 +34,7 @@ namespace CGF.Network.General.Server
             {
                 lock (m_sessionMap)
                 {
-                    ISession session = null;
+                    ISession session = GetSession(sid);
 
                     if (sid == 0)
                     {

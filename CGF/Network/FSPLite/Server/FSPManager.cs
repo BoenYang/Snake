@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using CGF.CGF.Network.FSPLite;
+﻿using System;
+using System.Collections.Generic;
 using CGF.Network.General.Server;
 
 namespace CGF.Network.FSPLite.Server
@@ -12,6 +12,7 @@ namespace CGF.Network.FSPLite.Server
 
         private FSPParam m_param = new FSPParam();
 
+        private long m_lastTicks;
 
         public void Init(int port)
         {
@@ -71,9 +72,18 @@ namespace CGF.Network.FSPLite.Server
         {
             m_gateWay.Tick();
 
-            foreach (FSPGame game in m_gameMap.Values)
+            uint current = (uint) TimeUtils.GetTotalMillisecondsSince1970();
+
+            long nowticks = DateTime.Now.Ticks;
+            long interval = nowticks - m_lastTicks;
+            long frameIntervalTicks = m_param.serverFrameInterval * 10000;
+            if (interval > frameIntervalTicks)
             {
-                game.EnterFrame();
+                m_lastTicks = nowticks - (nowticks % frameIntervalTicks);
+                foreach (FSPGame game in m_gameMap.Values)
+                {
+                    game.EnterFrame();
+                }
             }
         }
     }
