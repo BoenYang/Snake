@@ -13,19 +13,19 @@ namespace CGF.Network.General.Client
 
         public bool Connected { get; private set; }
 
-        public uint Id { get; private set; }
+        public uint Id { get; protected set; }
 
-        private Socket m_socket;
+        protected Socket m_socket;
+
+        protected SwitchQueue<byte[]> m_recvQueue;
+
+        protected string m_ip;
+
+        protected int m_port;
 
         private EndPoint m_remoteEndPoint;
 
         private Thread m_reciveThread;
-
-        private string m_ip;
-
-        private int m_port;
-
-        private SwitchQueue<byte[]> m_recvQueue;
 
         private NetBuffer m_recvNetBuffer;
 
@@ -45,7 +45,7 @@ namespace CGF.Network.General.Client
             m_remoteEndPoint = new IPEndPoint(IPAddress.Parse(m_ip),m_port);
             m_socket = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
             m_socket.Connect(m_remoteEndPoint);
-            m_reciveThread = new Thread(Thread_Recive);
+            m_reciveThread = new Thread(Thread_Receive);
             m_reciveThread.Start();
             Connected = true;
             Debuger.Log("Connect to {0} port {1} success",ip,port);
@@ -69,13 +69,20 @@ namespace CGF.Network.General.Client
 
             if (m_socket != null)
             {
-                m_socket.Shutdown(SocketShutdown.Both);
-                m_socket.Close();
-                m_socket = null;
+                try
+                {
+                    m_socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (Exception e)
+                {
+                    Debuger.LogWaring(e.Message + e.StackTrace);
+                }
             }
+            m_socket.Close();
+            m_socket = null;
         }
 
-        public bool Send(byte[] bytes, int len)
+        public virtual bool Send(byte[] bytes, int len)
         {
             try
             {
@@ -93,11 +100,11 @@ namespace CGF.Network.General.Client
             }
         }
 
-        public void Tick()
+        public virtual void Tick()
         {
             if (Connected)
             {
-                DoReciveInMain();
+                DoReceiveInMain();
             }
             else
             {
@@ -105,24 +112,28 @@ namespace CGF.Network.General.Client
             }
         }
 
-        private void DoReciveInMain()
+
+        protected virtual void DoReceiveInMain()
         {
             m_recvQueue.Switch();
             while (!m_recvQueue.Empty())
             {
                 byte[] buffer = m_recvQueue.Pop();
-                OnRecive(buffer, buffer.Length);
+                if (OnRecive != null)
+                {
+                    OnRecive(buffer, buffer.Length);
+                }
             }
         }
 
 
-        private void Thread_Recive()
+        private void Thread_Receive()
         {
             while (Connected)
             {
                 try
                 {
-                    DoReciveInThread();
+                    DoReceiveInThread();
                 }
                 catch (Exception e)
                 {
@@ -133,7 +144,7 @@ namespace CGF.Network.General.Client
             }
         }
 
-        private void DoReciveInThread()
+        private void DoReceiveInThread()
         {
             EndPoint remotePoint = new IPEndPoint(IPAddress.Any, 0);
             int len = m_socket.Receive(m_recvBuffer, SocketFlags.None);
@@ -166,9 +177,9 @@ namespace CGF.Network.General.Client
 
         private void ReadPackage()
         {
-            uint sid = m_recvNetBuffer.ReadUInt();
+            Id = m_recvNetBuffer.ReadUInt();
             uint packageSize = m_recvNetBuffer.ReadUInt();
-            Debuger.Log("read package sid {0} , package size {1}",sid,packageSize);
+            Debuger.Log("read package sid {0} , package size {1}", Id, packageSize);
             while (m_recvNetBuffer.Length >= packageSize)
             {
                 long restBufferLen = m_recvNetBuffer.Length - packageSize;

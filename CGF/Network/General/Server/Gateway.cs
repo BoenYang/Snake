@@ -5,14 +5,13 @@ namespace CGF.Network.General.Server
 
     public class Gateway
     {
-        private Dictionary<uint, ISession> m_sessionMap;
+        protected int m_port;
 
-        private int m_port;
+        protected Dictionary<uint, ISession> m_sessionMap;
 
-        private ISocket m_systemSocket;
+        protected ISocket m_systemSocket;
 
-
-        private ISessionListener m_sessionListener;
+        protected ISessionListener m_sessionListener;
 
         public void Init(int port,ISessionListener listener)
         {
@@ -22,41 +21,54 @@ namespace CGF.Network.General.Server
             Start();
         }
 
-        public void Start()
+        public virtual void Start()
         {
             m_systemSocket = new TCPSocket();
             m_systemSocket.Start(m_port);
             m_systemSocket.OnReceive = OnRecive;
         }
 
-        private void OnRecive(uint sid, byte[] bytes,int len , object arg)
+        protected virtual void OnRecive(uint sid, byte[] bytes,int len , object arg)
         {
             if (len > 0)
             {
-            lock (m_sessionMap)
+                lock (m_sessionMap)
                 {
                     ISession session = null;
 
                     if (sid == 0)
                     {
-                        uint newSid = SessionID.NewID();
-                        session = m_systemSocket.CreateSession(m_sessionListener,newSid, arg);
-                        m_sessionMap.Add(newSid, session);
-                        Debuger.Log("Create a Session sid = " + newSid);
+                        session = CreateSession();
+                        m_sessionMap.Add(session.sid, session);
+                        Debuger.Log("Create a Session sid = " + session.sid);
                     }
 
                     if (session != null)
                     {
 
                         Debuger.Log("Recive session data sid = " + sid);
-                        session.DoReciveInGateway(bytes, len);
                         session.Active(arg);
+                        session.DoReciveInGateway(bytes, len);
                     }
                 }
             }
         }
 
+        public ISession CreateSession()
+        {
+            uint newSid = SessionID.NewID();
+            return m_systemSocket.CreateSession(m_sessionListener, newSid, m_systemSocket);
+        }
 
+        public ISession GetSession(uint sid)
+        {
+            if (m_sessionMap.ContainsKey(sid))
+            {
+                return m_sessionMap[sid];
+            }
+
+            return null;
+        }
 
         public void Tick()
         {

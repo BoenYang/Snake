@@ -5,7 +5,7 @@ using SGF.Network.Core;
 
 namespace CGF.Network.General.Server
 {
-    class TCPSesssion : ISession
+    public class TCPSession : ISession
     {
         public uint sid { get; private set; }
         public uint uid { get; private set; }
@@ -16,10 +16,9 @@ namespace CGF.Network.General.Server
 
         private SwitchQueue<byte[]> m_RecvBufQueue = new SwitchQueue<byte[]>();
 
-        public TCPSesssion(uint sid, Socket client, ISessionListener listener)
+        public TCPSession(uint sid,ISessionListener listener)
         {
             m_listener = listener;
-            m_clientSocket = client;
             this.sid = sid;
         }
 
@@ -33,14 +32,25 @@ namespace CGF.Network.General.Server
             return m_clientSocket != null;
         }
 
-        public void Send(byte[] bytes, int len)
+        public bool Send(byte[] bytes, int len)
         {
+            if (m_clientSocket == null)
+            {
+                return false;
+            }
+
             Buffer.BlockCopy(bytes, 0, bytes, 8, len);
             NetBuffer buffer = new NetBuffer();
             buffer.Attach(bytes, 8 + len);
             buffer.WriteUInt(sid, 0);
             buffer.WriteUInt((uint)(8 + len), 4);
-            m_clientSocket.Send(buffer.GetBytes(),len + 8,SocketFlags.None);
+            int ret = m_clientSocket.Send(buffer.GetBytes(),len + 8,SocketFlags.None);
+            return ret > 0;
+        }
+
+        public void SetReceiveListener(ISessionListener listener)
+        {
+            this.m_listener = listener;
         }
 
 
@@ -58,8 +68,10 @@ namespace CGF.Network.General.Server
             while (!m_RecvBufQueue.Empty())
             {
                 byte[] recvBufferRaw = m_RecvBufQueue.Pop();
-                m_listener.OnReceive(this, recvBufferRaw, recvBufferRaw.Length);
-
+                if (m_listener != null)
+                {
+                    m_listener.OnReceive(this, recvBufferRaw, recvBufferRaw.Length);
+                }
             }
         }
 

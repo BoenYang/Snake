@@ -27,11 +27,13 @@ namespace CGF.Network.General.Server
 
         bool IsActive();
 
-        void Send(byte[] bytes, int len);
+        bool Send(byte[] bytes, int len);
 
         void Tick();
 
         void DoReciveInGateway(byte[] bytes, int len);
+
+        void SetReceiveListener(ISessionListener listener);
     }
 }
 
